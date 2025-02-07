@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graduated Cylinder with Water</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #eefff0;
+      position: relative;
+      overflow: hidden;
+    }
+    #dropdown-container {
+      display: flex;
+      font-weight: bold;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 20px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: absolute;
+      top: 10px;
+    }
+
+    #resetButton {
+      background-color: red;
+      border: 1px solid black;
+    }
+
+    #resetButton:hover {
+      background-color: darkred;
+    }
+
+    #shape-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: absolute;
+      top: 30px;
+      gap: 10px;
+    }
+    .shape-button {
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: bold;
+      min-width: 100px;
+      text-align: center;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .shape-button:hover {
+      background-color: #0056b3;
+    }
+    #graduated-cylinder-container {
+      margin-top: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Styling for the graduated cylinder */
+    #graduated-cylinder {
+      width: 50px;
+      height: 332px;
+      background-color: lightblue;
+      border: 3px solid black;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    /* Water styling */
+    .water {
+      position: absolute;
+      bottom: 0;
+      width: 100%; /* Full width of the cylinder */
+      background-color: rgba(0, 123, 255, 0.4);  /* Light blue water */
+      border-radius: 50% / 0 0 0 0; /* No rounding of corners for the water */
+      transition: height 0.3s ease-in-out;
+      z-index: 1;  /* Ensures water is in front of shapes */
+    }
+
+    .water::after {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -1px;
+      right: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.4); /* Subtle meniscus highlight */
+      border-radius: 10%;
+    }
+
+    /* Tick marks should be on top */
+    .tick-mark {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: black;
+      z-index: 2; /* Ensures tick marks are in front of everything */
+    }
+
+    .tick-label {
+      position: absolute;
+      left: 32px;  /* Position labels to the right of the cylinder */
+      font-size: 12px;
+      font-weight: bold;
+      color: black;
+      z-index: 3; /* Ensure labels appear on top */
+    }
+
+    #addWaterButton, #removeWaterButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #addWaterButton:hover, #removeWaterButton:hover {
+      background-color: #218838;
+    }
+
+    #removeWaterButton {
+      background-color: #dc3545;
+    }
+
+    #removeWaterButton:hover {
+      background-color: #c82333;
+    }
+
+    .sphere {
+      border-radius: 50%; /* Ensures a perfect circle */
+    }
+    .cylinder {
+      border-radius: 10%;
+    }
+
+  </style>
+</head>
+<body>
+<div id="dropdown-container">
+  <label for="shapeSetSelector">Select Assigned Metal:</label>
+  <select id="shapeSetSelector">
+    <option value="" selected>Choose from Dropdown</option>
+    <option value="set1">Set 1</option>
+    <option value="set2">Set 2</option>
+    <option value="set3">Set 3</option>
+  </select>
+  <button id="resetButton" class="shape-button">RESET</button>
+</div>
+<div id="shape-buttons" style="display: none; position: absolute; margin-top: 100px;">
+  <button id="addSphere" class="shape-button">Add Ellipsoid</button>
+  <button id="addCube" class="shape-button">Add Cuboid</button>
+  <button id="addCylinder" class="shape-button">Add Cylinder</button>
+  <button id="removeShapes" class="shape-button" style="background-color: darkred;">Remove Everything</button>
+</div>
+<div id="graduated-cylinder-container">
+  <div id="graduated-cylinder">
+    <!-- Water element starts here -->
+    <div id="water" class="water"></div>
+    <!-- Tick marks inside the graduated cylinder -->
+    <div class="tick-label" style="top: 5px; left: 50%; transform: translateX(-50%); text-align: center;">mL</div>
+    <div class="tick-mark" style="top: 30px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 24px;">10</div>
+    <div class="tick-mark" style="top: 36px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 42px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 48px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 54px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 60px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 54px;">9</div>
+    <div class="tick-mark" style="top: 66px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 72px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 78px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 84px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 90px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 84px;">8</div>
+    <div class="tick-mark" style="top: 96px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 102px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 108px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 114px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 120px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top:114px;">7</div>
+    <div class="tick-mark" style="top: 126px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 132px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 138px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 144px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 150px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 144px;">6</div>
+    <div class="tick-mark" style="top: 156px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 162px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 168px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 174px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 180px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 174px;">5</div>
+    <div class="tick-mark" style="top: 186px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 192px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 198px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 204px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 210px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 204px;">4</div>
+    <div class="tick-mark" style="top: 216px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 222px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 228px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 234px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 240px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 234px;">3</div>
+    <div class="tick-mark" style="top: 246px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 252px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 258px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 264px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 270px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 264px;">2</div>
+    <div class="tick-mark" style="top: 276px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 282px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 288px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 294px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 300px; width: 60%; height: 1px;"></div>
+    <div class="tick-label" style="top: 294px;">1</div>
+    <div class="tick-mark" style="top: 306px; width: 40%; height: 1px;"></div>
+    <div class="tick-mark" style="top: 312px; width: 40%; height: 1px;"></div>
+  </div>
+  <button id="addWaterButton" class="shape-button">Add Water</button>
+  <button id="removeWaterButton" class="shape-button">Remove Water</button>
+</div>
+
+<script>
+  const shapeSets = {
+    set1: { sphere: 1.729, cube: 7.483, cylinder: 12.041 },
+    set2: { sphere: 3.003, cube: 13.013, cylinder: 11.396 },
+    set3: { sphere: 2.500, cube: 13.044, cylinder: 6.786 }
+  };
+  const shapeColors = {
+    set1: { sphere: '#ffc87fff', cube: '#ffc87fff', cylinder: '#ffc87fff' },
+    set2: { sphere: '#e69b56ff', cube: '#e69b56ff', cylinder: '#e69b56ff' },
+    set3: { sphere: '#b7b7b7ff', cube: '#b7b7b7ff', cylinder: '#b7b7b7ff' }
+  };
+
+  const shapeGradients = {
+    set1: {
+      sphere: 'radial-gradient(circle, #ffc87fff, #cea064)',
+      cube: 'linear-gradient(45deg, #ffc87fff, #cea064)',
+      cylinder: 'linear-gradient(45deg, #ffc87fff, #cea064)'
+    },
+    set2: {
+  
+      sphere: 'radial-gradient(circle, #e69b56ff, #c07d3f)',
+      cube: 'linear-gradient(45deg, #e69b56ff, #c07d3f)',
+      cylinder: 'linear-gradient(45deg, #e69b56ff, #c07d3f)'
+    },
+    set3: {
+      sphere: 'radial-gradient(circle, #b7b7b7ff, #9b9b9b)',
+      cube: 'linear-gradient(45deg, #b7b7b7ff, #9b9b9b)',
+      cylinder: 'linear-gradient(45deg, #b7b7b7ff, #9b9b9b)'
+    }
+  };
+
+  let currentSet = "";
+  let totalWeight = 0;
+  let tareOffset = 0;
+  let addedShapes = {};
+  let waterHeight = 0;  // Initial water height in pixels
+  const cylinderVolume = 350;  // Total volume of the cylinder (in pixels, height corresponds to volume)
+
+  // Function to add shapes to the cylinder
+  function addShape(shape) {
+    if (!currentSet) return;
+    if (Object.keys(addedShapes).length > 0) return;
+
+    const shapeElement = document.createElement("div");
+    shapeElement.classList.add("shape", shape);
+
+
+    // Width and height values depending on the shape
+    let width = 0;
+    let height = 0;
+
+    // Assign width and height based on shape type
+    if (shape === "cylinder") {
+      width = "32px"; // Change this value to adjust the cylinder's width
+      height = "130px"; // Change this value to adjust the cylinder's height
+    } else if (shape === "sphere") {
+      width = "34px"; // You can adjust the sphere's width
+      height = "34px"; // Sphere is a circle, so width and height should match
+    } else if (shape === "cube") {
+      width = "35px"; // Adjust the cube's width here
+      height = "137px"; // Adjust the cube's height here
+    }
+
+    // Apply the width and height
+    shapeElement.style.width = width;
+    shapeElement.style.height = height;
+
+    // Set background color based on current set
+    shapeElement.style.background = shapeGradients[currentSet][shape];
+
+    // Add the shape to the page
+    document.body.appendChild(shapeElement);  // or wherever you want to append it
+
+    let pan = document.getElementById("graduated-cylinder");
+
+    shapeElement.style.position = "absolute";
+    shapeElement.style.bottom = "10px";  // Adjust this value so the shape rests on the pan
+    shapeElement.style.left = "50%";
+    shapeElement.style.transform = "translateX(-50%)";
+
+    pan.appendChild(shapeElement);
+    addedShapes[shapeElement.id] = { element: shapeElement, mass: shapeSets[currentSet][shape] };
+    totalWeight += shapeSets[currentSet][shape];
+
+    // Calculate the volume displacement and increase water level
+    increaseWaterLevel(shapeSets[currentSet][shape]);
+
+    // Disable other buttons
+    document.querySelectorAll(".shape-button:not(#resetButton)").forEach(button => {
+      button.disabled = true;
+    });
+
+    // Keep remove button enabled
+    document.getElementById("removeShapes").disabled = false;
+  }
+
+  // Function to remove all added shapes and water
+  function removeShapes() {
+    for (let shape in addedShapes) {
+      totalWeight -= addedShapes[shape].mass;
+      addedShapes[shape].element.remove();
+    }
+    addedShapes = {};
+    resetWaterLevel();  // Reset water level when shapes are removed
+
+    // Enable shape buttons again
+    document.querySelectorAll(".shape-button").forEach(button => {
+      button.disabled = false;
+    });
+  }
+
+  // Function to reset everything
+  document.getElementById("resetButton").addEventListener("click", () => {
+    // Reset variables
+    totalWeight = 0;
+    tareOffset = 0;
+    currentSet = "";
+    waterHeight = 0;
+
+    // Reset water height and visually empty it
+    const waterElement = document.getElementById("water");
+    waterElement.style.height = "0px";
+
+    // Reset shapes and clear the shape container
+    removeShapes();
+
+    // Hide shape buttons (and disable them as needed)
+    const shapeButtons = document.getElementById("shape-buttons");
+    shapeButtons.style.display = "none";
+
+    // Reset dropdown to default and trigger shape button visibility updates
+    const dropdown = document.getElementById("shapeSetSelector");
+    dropdown.value = ""; // Reset dropdown
+  });
+
+  // Function to handle adding water
+  document.getElementById("addWaterButton").addEventListener("click", () => {
+    let water = document.getElementById("water");
+    let increment = 23; // Adjust this value for how much water should be added per click
+
+    if (waterHeight + increment <= cylinderVolume) {
+      waterHeight += increment;
+      water.style.height = `${waterHeight}px`;
+    } else {
+      waterHeight = cylinderVolume; // Prevent overflow
+      water.style.height = `${waterHeight}px`;
+    }
+  });
+
+  // Function to handle removing water
+  document.getElementById("removeWaterButton").addEventListener("click", () => {
+    if (waterHeight > 0) {
+      waterHeight = Math.max(0, waterHeight - 23);
+      document.getElementById("water").style.height = `${waterHeight}px`;
+    }
+  });
+
+  // Function to reset the water level
+  function resetWaterLevel() {
+    waterHeight = 0; // Set water height to zero
+    const waterElement = document.getElementById("water");
+    waterElement.style.height = `${waterHeight}px`;  // Update the water height to zero
+  }
+
+  function increaseWaterLevel(shapeMass) {
+    const shapeVolume = shapeMass * 10; // Convert mass to volume in pixels
+
+    // Ensure that displacement does not exceed existing water height
+    if (waterHeight > 0) {
+      let maxPossibleIncrease = Math.min(shapeVolume, waterHeight); // Displacement cannot exceed current water
+      waterHeight += maxPossibleIncrease; // Only increase within allowed limit
+
+      if (waterHeight > cylinderVolume) {
+        waterHeight = cylinderVolume; // Prevent overflow
+      }
+
+      document.getElementById("water").style.height = `${waterHeight}px`;
+    }
+  }
+
+  // Shape buttons for adding shapes
+  document.getElementById("removeShapes").addEventListener("click", removeShapes);
+  document.getElementById("addSphere").addEventListener("click", () => addShape("sphere"));
+  document.getElementById("addCube").addEventListener("click", () => addShape("cube"));
+  document.getElementById("addCylinder").addEventListener("click", () => addShape("cylinder"));
+
+  document.getElementById("shape-buttons").style.display = currentSet ? "flex" : "none";
+
+  // Shape set selector functionality
+  document.getElementById("shapeSetSelector").addEventListener("change", (event) => {
+    currentSet = event.target.value;
+    document.getElementById("shape-buttons").style.display = currentSet ? "flex" : "none";
+    removeShapes();
+  });
+</script>
+</body>
+</html>
